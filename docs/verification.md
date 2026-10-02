@@ -1,0 +1,39 @@
+# Verification
+
+## The live result
+
+On October 1, 2026, using Codex CLI **0.159.2** and the desktop app:
+
+1. `exec resume` against an idle desktop chat failed with an active-writer conflict.
+2. `codex queue` acknowledged a message addressed to that same chat.
+3. The user saw the queued message on the paired phone. That first attempt was
+   manually sent and stopped; it was **not** automatic-delivery evidence.
+4. A second message was queued and the submitting agent immediately ended its turn.
+5. The test message arrived as the next user input and the agent produced the
+   exact requested acknowledgement: **“Wake Codex automatic queue test received.”**
+
+That is evidence for the native queue transport in this tested setup—not a
+claim of universal client compatibility or completion of arbitrary jobs.
+Private thread IDs, transcripts and local paths are intentionally not published.
+
+## Release checks
+
+Version 0.4.0 integrates that transport as the service's default. Automated tests
+exercise the service → queue subprocess boundary using a test double, so tests
+do not spend model tokens. Coverage includes terminal states, duplicate suppression,
+durable restart, real worker exit, file event watching, authentication, matching
+queue acknowledgments, cancellation, and no automatic retry after ambiguity.
+
+The combined 0.4.0 real-job → listener → real desktop chain has not yet received
+a separate live end-to-end certification. The native queue path was tested live;
+the integrated service path is covered by non-model tests. Do not conflate them.
+
+## Boundaries
+
+- No guarantee of exactly-once execution across process crashes. A process can
+  die after sending a message but before recording its acknowledgment.
+- No guarantee that every Codex app/CLI version consumes external queued messages.
+- No test of restoring running jobs after a host reboot.
+- No supported Windows runtime (`fcntl` is used for process locks).
+- Queue mode inherits existing session settings; it is not a new security sandbox.
+- A model can fail after receiving a correct callback. Inspect its result.
