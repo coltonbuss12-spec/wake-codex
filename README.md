@@ -11,12 +11,13 @@ chat when there is something to do.
 No recurring "is it done yet?" prompts. No new chat for every update. No need to
 leave an agent burning tokens to watch a process.
 
-## Install it with your agent
+## Install Wake Codex with a Codex chat
 
-**Copy this into the Codex chat you want to wake:**
+**Paste this into a Codex chat to install Wake Codex and start using it:**
 
 ```text
-Set up Wake Codex for me from https://github.com/rotcev/wake-codex.
+Install Wake Codex for me from https://github.com/rotcev/wake-codex
+so I can use it to resume Codex chats when long-running jobs finish.
 
 Read its README and SKILL.md, inspect the code, and install it as a Codex skill
 in my configured skills directory. Reuse an existing checkout if appropriate;
@@ -48,6 +49,9 @@ If you're using a different agent to install it, specify the target Codex chat
 explicitly—the installer agent's conversation is not necessarily a Codex thread.
 
 Prefer doing it yourself? Jump to the [command-line quick start](#quick-start).
+
+Installation is reusable. The test uses the setup chat; for each real job, register
+the Codex chat you want to receive its result and what the agent should do next.
 
 ## How the handoff works
 
