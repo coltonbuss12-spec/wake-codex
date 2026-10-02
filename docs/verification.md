@@ -37,3 +37,16 @@ the integrated service path is covered by non-model tests. Do not conflate them.
 - No supported Windows runtime (`fcntl` is used for process locks).
 - Queue mode inherits existing session settings; it is not a new security sandbox.
 - A model can fail after receiving a correct callback. Inspect its result.
+
+## Windows port verification
+
+The native Windows test suite was exercised with Python 3.12 and a fake Codex
+queue: detached start/health/stop, wrapped job completion, authenticated HTTP
+callbacks, duplicate suppression, lock contention/release, process liveness,
+private inherited state ACLs, and Unicode continuations. These tests make no
+model calls. The CI matrix includes Windows with Python 3.10 and 3.13; adding
+those jobs is not evidence that hosted CI has passed.
+
+The desktop-matching native Codex CLI 0.159.2 supports `queue --help` on the
+Windows test host. An actual automatic desktop reply remains a separate live
+verification step; deterministic tests do not establish it.
