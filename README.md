@@ -8,22 +8,85 @@ Training a model? Running a long build? Waiting for an evaluation? Wake Codex
 keeps a durable record of the job and queues a follow-up in your existing Codex
 chat when there is something to do.
 
-```text
-Start the job ──► End your turn ──► Go do something else
-                      │
-               No model inference
-                      │
-Job completes / fails / pauses / needs review
-                      │
-                Durable event
-                      │
-              Native Codex queue
-                      │
-          Same chat continues with the result
-```
-
 No recurring "is it done yet?" prompts. No new chat for every update. No need to
 leave an agent burning tokens to watch a process.
+
+## Install it with your agent
+
+**Copy this into the Codex chat you want to wake:**
+
+```text
+Set up Wake Codex for me from https://github.com/rotcev/wake-codex.
+
+Read its README and SKILL.md, inspect the code, and install it as a Codex skill
+in my configured skills directory. Reuse an existing checkout if appropriate;
+preserve any existing installation or local edits rather than overwriting them.
+
+Check Python 3.10+ and that my authenticated Codex CLI supports `codex queue`.
+Use a CLI matching my desktop installation if necessary. Don't change my model,
+permissions, or app settings, and don't use `exec resume` for this desktop chat.
+
+Run the token-free tests. Start the queue-backed listener with a private state
+directory, then verify its health. Resolve this chat's actual UUID; never guess
+it or create another chat as a substitute. If a prerequisite is missing, explain
+the blocker instead of claiming setup succeeded.
+
+I authorize one harmless end-to-end test in this chat: register a wait, launch
+a short dummy job through Wake Codex, and have its completion queue an instruction
+to reply once with “Wake Codex is connected.” The test must not touch my real jobs.
+Tell me what is armed, then immediately end your turn so the queue can run.
+Do not poll with a model, create a recurring automation, or retry the test blindly.
+
+Keep tokens, state and logs private. Report the install path, state path, and
+how to stop the listener. Distinguish message acceptance from an actual automatic
+reply; don't claim the live test passed before that reply is observed.
+```
+
+Keep the host and owning Codex app/session available. **Let the setup turn end;
+don't manually send the queued test.** The automatic reply is the useful check.
+If you're using a different agent to install it, specify the target Codex chat
+explicitly—the installer agent's conversation is not necessarily a Codex thread.
+
+Prefer doing it yourself? Jump to the [command-line quick start](#quick-start).
+
+## How the handoff works
+
+```mermaid
+flowchart TD
+    A["Setup: register chat ID + follow-up instruction"] --> B["Wake Codex: durable wait record"]
+    A --> C["Start the job; agent ends its turn"]
+    C --> D["Job finishes, fails, pauses, or needs review"]
+    D --> E["Wrapper or callback reports status + result paths"]
+    E --> B
+    B -->|"Terminal event received"| F["Native Codex queue: message to the same chat"]
+    F --> G["Owning session consumes the message when ready"]
+    G --> H["Agent reads the results and follows the saved instruction"]
+```
+
+**The job doesn't need to know your chat ID or how Codex works.** Wake Codex stores
+that mapping. A wrapper can detect a foreground job's exit without changing its
+code; an external producer only needs its private callback registration and a
+small terminal event. Save result files before reporting completion.
+
+While the job runs, only ordinary Python code waits—no model inference. The
+follow-up uses a normal model turn once Codex consumes the message.
+
+## Examples: what should happen when the job ends?
+
+The saved instruction decides the follow-up. Start with inspection and reporting;
+additional actions still need your authorization.
+
+| Long-running job | Event | Example follow-up instruction |
+| --- | --- | --- |
+| Build or test suite | `completed` or `failed` | “Read the log. Summarize the result and the first actionable failure. Don't edit code yet.” |
+| Dataset import | `completed` | “Check the output manifest and row counts. Report missing or rejected records.” |
+| Model evaluation | `needs_review` | “Compare the saved metrics with the baseline. Recommend a next step; don't launch another run.” |
+| Batch rendering or export | `completed` | “Inspect the output manifest and list the generated files.” |
+| Job paused by a guardrail | `paused` | “Explain the recorded reason and what needs a decision. Don't resume the job.” |
+
+For example, a test runner exits with a nonzero code → the wrapper saves a failure
+event and log path → Wake Codex queues “inspect the log” → the agent reports the
+failure in the same conversation. Nobody needs to repeatedly ask whether it's done.
 
 ## Why a queue, not another agent process?
 
