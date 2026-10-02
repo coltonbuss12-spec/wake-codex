@@ -34,6 +34,9 @@ class Store:
     def __init__(self, root):
         self.root = Path(root).expanduser().resolve()
         private_directory(self.root)
+        # Packaged Windows apps can redirect a newly created LocalAppData path.
+        # Resolve again so parent and detached child report the same state identity.
+        self.root = self.root.resolve()
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             db.execute("""CREATE TABLE IF NOT EXISTS waits (
